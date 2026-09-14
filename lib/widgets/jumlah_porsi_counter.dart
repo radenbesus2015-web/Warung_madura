@@ -79,10 +79,11 @@ class _JumlahPorsiCounterState extends State<JumlahPorsiCounter> {
     final bool canIncrement = widget.isEnabled && _jumlahPorsi < widget.maxPorsi;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 3),
+      height: 32,
+      padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 2),
       decoration: BoxDecoration(
         color: widget.isEnabled ? const Color(0xFFF9FAFB) : const Color(0xFFE5E7EB),
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(8),
         border: Border.all(
           color: widget.isEnabled
               ? (_jumlahPorsi > 0 ? const Color(0xFF16A34A).withValues(alpha: 0.3) : const Color(0xFFE5E7EB))
@@ -91,6 +92,7 @@ class _JumlahPorsiCounterState extends State<JumlahPorsiCounter> {
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           // Tombol Kurang
           Material(
@@ -100,24 +102,24 @@ class _JumlahPorsiCounterState extends State<JumlahPorsiCounter> {
               borderRadius: BorderRadius.circular(6),
               onTap: canDecrement ? _kurang : null,
               child: SizedBox(
-                width: 28,
-                height: 28,
+                width: 26,
+                height: 26,
                 child: Icon(
                   Icons.remove,
-                  size: 16,
+                  size: 15,
                   color: canDecrement ? const Color(0xFF16A34A) : const Color(0xFF9CA3AF),
                 ),
               ),
             ),
           ),
           // Angka Jumlah Porsi
-          Container(
-            constraints: const BoxConstraints(minWidth: 32),
-            alignment: Alignment.center,
+          SizedBox(
+            width: 28,
             child: Text(
               '$_jumlahPorsi',
+              textAlign: TextAlign.center,
               style: TextStyle(
-                fontSize: 14,
+                fontSize: 13,
                 fontWeight: FontWeight.bold,
                 color: widget.isEnabled
                     ? (_jumlahPorsi > 0 ? const Color(0xFF16A34A) : const Color(0xFF1F2937))
@@ -133,11 +135,11 @@ class _JumlahPorsiCounterState extends State<JumlahPorsiCounter> {
               borderRadius: BorderRadius.circular(6),
               onTap: canIncrement ? _tambah : null,
               child: SizedBox(
-                width: 28,
-                height: 28,
+                width: 26,
+                height: 26,
                 child: Icon(
                   Icons.add,
-                  size: 16,
+                  size: 15,
                   color: canIncrement ? Colors.white : const Color(0xFF9CA3AF),
                 ),
               ),

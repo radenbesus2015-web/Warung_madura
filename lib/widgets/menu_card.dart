@@ -68,9 +68,8 @@ class MenuCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Bagian Foto Makanan + Badge HABIS
+            // Bagian Foto Makanan + Badge HABIS (Mengisi ruang sisa atas secara fleksibel)
             Expanded(
-              flex: 5,
               child: Stack(
                 children: [
                   ClipRRect(
@@ -119,84 +118,77 @@ class MenuCard extends StatelessWidget {
               ),
             ),
 
-            // Informasi Menu
-            Expanded(
-              flex: 5,
-              child: Padding(
-                padding: const EdgeInsets.all(12.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          item.namaMenu,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF1F2937),
-                          ),
-                        ),
-                        const SizedBox(height: 3),
-                        Text(
-                          formatRupiah(item.harga),
-                          style: const TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w700,
-                            color: Color(0xFF1F2937),
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          'Stok: ${item.porsiTersisa}',
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: Color(0xFF6B7280),
-                          ),
-                        ),
-                      ],
+            // Informasi Menu (Ukuran pas alami, tidak akan overflow & jarak tombol counter konsisten)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    item.namaMenu,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF1F2937),
                     ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    formatRupiah(item.harga),
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF1F2937),
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'Stok: ${item.porsiTersisa}',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: Color(0xFF6B7280),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
 
-                    // Counter kontrol
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        if (jumlahPesanan >= 5)
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 6,
-                              vertical: 2,
+                  // Counter kontrol
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      if (jumlahPesanan >= 5)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFDCFCE7),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: const Text(
+                            '-10%',
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF16A34A),
                             ),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFDCFCE7),
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: const Text(
-                              '-10%',
-                              style: TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xFF16A34A),
-                              ),
-                            ),
-                          )
-                        else
-                          const SizedBox.shrink(),
-                        JumlahPorsiCounter(
-                          initialValue: jumlahPesanan,
-                          maxPorsi: item.porsiTersisa,
-                          isEnabled: isAvailable,
-                          onChanged: onPorsiChanged,
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
+                          ),
+                        )
+                      else
+                        const SizedBox.shrink(),
+                      JumlahPorsiCounter(
+                        initialValue: jumlahPesanan,
+                        maxPorsi: item.porsiTersisa,
+                        isEnabled: isAvailable,
+                        onChanged: onPorsiChanged,
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
           ],
@@ -214,7 +206,6 @@ class MenuCard extends StatelessWidget {
     return Opacity(
       opacity: cardOpacity,
       child: Container(
-        margin: const EdgeInsets.only(bottom: 10),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(14),
@@ -233,8 +224,9 @@ class MenuCard extends StatelessWidget {
           ],
         ),
         child: Padding(
-          padding: const EdgeInsets.all(10.0),
+          padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 10.0),
           child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               // Gambar Thumbnail
               Stack(
@@ -242,8 +234,8 @@ class MenuCard extends StatelessWidget {
                   ClipRRect(
                     borderRadius: BorderRadius.circular(10),
                     child: SizedBox(
-                      width: 80,
-                      height: 80,
+                      width: 76,
+                      height: 76,
                       child: _buildImage(item.imageUrl),
                     ),
                   ),
@@ -272,11 +264,12 @@ class MenuCard extends StatelessWidget {
                     ),
                 ],
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 14),
 
               // Detail Menu
               Expanded(
                 child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
@@ -284,12 +277,12 @@ class MenuCard extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
-                        fontSize: 14,
+                        fontSize: 15,
                         fontWeight: FontWeight.bold,
                         color: Color(0xFF1F2937),
                       ),
                     ),
-                    const SizedBox(height: 2),
+                    const SizedBox(height: 3),
                     Text(
                       formatRupiah(item.harga),
                       style: const TextStyle(
@@ -309,6 +302,7 @@ class MenuCard extends StatelessWidget {
                   ],
                 ),
               ),
+              const SizedBox(width: 8),
 
               // Counter
               JumlahPorsiCounter(
