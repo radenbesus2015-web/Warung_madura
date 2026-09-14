@@ -1,6 +1,5 @@
 // =======================================================
-// ATURAN USAHA YANG WAJIB DIWUJUDKAN
-
+// ATURAN USAHA YANG WAJIB DIWUJUDKAN (PIRING PENUH)
 // Ditulis sebagai FUNGSI TERSENDIRI yang mengembalikan nilai
 // (Bukan menumpuk di dalam build).
 // =======================================================
@@ -15,6 +14,12 @@ double hitungSubtotalMenu({required int harga, required int jumlahPorsi}) {
   return subtotal;
 }
 
+/// Menghitung besaran diskon rupiah per item jika pesanan >= 5 porsi
+double hitungDiskonItem({required int harga, required int jumlahPorsi}) {
+  if (jumlahPorsi < 5) return 0.0;
+  return (harga * jumlahPorsi) * 0.10;
+}
+
 /// 2. Aturan Usaha 2: Validasi apakah menu bisa dipesan
 bool cekKetersediaanMenu({required bool tersedia, required int porsiTersisa}) {
   return tersedia && porsiTersisa > 0;
@@ -25,9 +30,14 @@ bool validasiBatasPorsi({required int jumlahPorsi, required int porsiTersisa}) {
   return jumlahPorsi <= porsiTersisa;
 }
 
-/// Fungsi Pendukung: Format Rupiah rapi
+/// 4. Pembulatan pembayaran ke pecahan Rp500 terdekat
+int bulatkanKePecahan500(num total) {
+  if (total <= 0) return 0;
+  return ((total / 500).round()) * 500;
+}
+
+/// Fungsi Pendukung: Format Rupiah rapi tanpa library eksternal
 String formatRupiah(num nominal) {
-  // Format manual tanpa dependensi eksternal intl agar langsung kompatibel
   String raw = nominal.toInt().toString();
   String hasil = '';
   int counter = 0;

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
 // =======================================================
-// KOMPONEN STATEFUL: JumlahPorsi
-// Nilainya berubah saat aplikasi berjalan melalui setState,
-// dan perubahannya langsung terlihat di layar.
+// KOMPONEN STATEFUL: JumlahPorsiCounter
+// Didesain modern sesuai UI Mockup Piring Penuh
+// Warna utama: Hijau #16A34A
 // =======================================================
 
 class JumlahPorsiCounter extends StatefulWidget {
@@ -57,7 +57,7 @@ class _JumlahPorsiCounterState extends State<JumlahPorsiCounter> {
             'Maksimal stok tersedia hanya ${widget.maxPorsi} porsi!',
           ),
           duration: const Duration(seconds: 1),
-          backgroundColor: Colors.orange.shade800,
+          backgroundColor: const Color(0xFFEF4444),
         ),
       );
     }
@@ -79,50 +79,68 @@ class _JumlahPorsiCounterState extends State<JumlahPorsiCounter> {
     final bool canIncrement = widget.isEnabled && _jumlahPorsi < widget.maxPorsi;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 3),
       decoration: BoxDecoration(
-        color: widget.isEnabled ? Colors.teal.shade50 : Colors.grey.shade200,
-        borderRadius: BorderRadius.circular(12),
+        color: widget.isEnabled ? const Color(0xFFF9FAFB) : const Color(0xFFE5E7EB),
+        borderRadius: BorderRadius.circular(10),
         border: Border.all(
-          color: widget.isEnabled ? Colors.teal.shade200 : Colors.grey.shade300,
+          color: widget.isEnabled
+              ? (_jumlahPorsi > 0 ? const Color(0xFF16A34A).withValues(alpha: 0.3) : const Color(0xFFE5E7EB))
+              : const Color(0xFFD1D5DB),
         ),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           // Tombol Kurang
-          IconButton(
-            iconSize: 20,
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-            onPressed: canDecrement ? _kurang : null,
-            icon: Icon(
-              Icons.remove_circle_outline,
-              color: canDecrement ? Colors.teal.shade700 : Colors.grey.shade400,
+          Material(
+            color: canDecrement ? const Color(0xFFDCFCE7) : const Color(0xFFE5E7EB),
+            borderRadius: BorderRadius.circular(6),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(6),
+              onTap: canDecrement ? _kurang : null,
+              child: SizedBox(
+                width: 28,
+                height: 28,
+                child: Icon(
+                  Icons.remove,
+                  size: 16,
+                  color: canDecrement ? const Color(0xFF16A34A) : const Color(0xFF9CA3AF),
+                ),
+              ),
             ),
           ),
           // Angka Jumlah Porsi
           Container(
-            constraints: const BoxConstraints(minWidth: 30),
+            constraints: const BoxConstraints(minWidth: 32),
             alignment: Alignment.center,
             child: Text(
               '$_jumlahPorsi',
               style: TextStyle(
-                fontSize: 15,
+                fontSize: 14,
                 fontWeight: FontWeight.bold,
-                color: widget.isEnabled ? Colors.teal.shade900 : Colors.grey.shade500,
+                color: widget.isEnabled
+                    ? (_jumlahPorsi > 0 ? const Color(0xFF16A34A) : const Color(0xFF1F2937))
+                    : const Color(0xFF9CA3AF),
               ),
             ),
           ),
           // Tombol Tambah
-          IconButton(
-            iconSize: 20,
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-            onPressed: canIncrement ? _tambah : null,
-            icon: Icon(
-              Icons.add_circle_outline,
-              color: canIncrement ? Colors.teal.shade700 : Colors.grey.shade400,
+          Material(
+            color: canIncrement ? const Color(0xFF16A34A) : const Color(0xFFE5E7EB),
+            borderRadius: BorderRadius.circular(6),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(6),
+              onTap: canIncrement ? _tambah : null,
+              child: SizedBox(
+                width: 28,
+                height: 28,
+                child: Icon(
+                  Icons.add,
+                  size: 16,
+                  color: canIncrement ? Colors.white : const Color(0xFF9CA3AF),
+                ),
+              ),
             ),
           ),
         ],

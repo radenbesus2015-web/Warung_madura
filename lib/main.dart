@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'models/menu_item.dart';
 import 'data/menu_data.dart';
-import 'utils/business_rules.dart';
 import 'widgets/menu_card.dart';
+import 'pages/ringkasan_pesanan_page.dart';
 
 void main() {
   runApp(const WarungApp());
@@ -14,43 +14,37 @@ class WarungApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Warung Selera Nusantara',
+      title: 'Piring Penuh',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         useMaterial3: true,
+        scaffoldBackgroundColor: const Color(0xFFF3F4F6),
         colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.teal,
-          primary: Colors.teal.shade800,
-        ),
-        scaffoldBackgroundColor: const Color(0xFFF7F9FA),
-        appBarTheme: AppBarTheme(
-          backgroundColor: Colors.teal.shade800,
-          foregroundColor: Colors.white,
-          elevation: 2,
+          seedColor: const Color(0xFF16A34A),
+          primary: const Color(0xFF16A34A),
         ),
       ),
-      home: const WarungHomeScreen(),
+      home: const PiringPenuhHomeScreen(),
     );
   }
 }
 
-class WarungHomeScreen extends StatefulWidget {
-  const WarungHomeScreen({super.key});
+class PiringPenuhHomeScreen extends StatefulWidget {
+  const PiringPenuhHomeScreen({super.key});
 
   @override
-  State<WarungHomeScreen> createState() => _WarungHomeScreenState();
+  State<PiringPenuhHomeScreen> createState() => _PiringPenuhHomeScreenState();
 }
 
-class _WarungHomeScreenState extends State<WarungHomeScreen> {
-  // Controller pencarian diinisialisasi pada initState dan dibuang pada dispose
+class _PiringPenuhHomeScreenState extends State<PiringPenuhHomeScreen> {
   late final TextEditingController _searchController;
 
-  // State
+  // Filter & Search State
   String _searchQuery = '';
   String _selectedCategory = 'Semua';
-  final List<MenuItem> _allMenus = dummyMenuList;
+  final List<MenuItem> _allMenus = List<MenuItem>.from(dummyMenuList);
 
-  // State Pesanan: Map index/namaMenu -> jumlah porsi yang dipesan
+  // Cart State: namaMenu -> jumlah porsi
   final Map<String, int> _orderCart = {};
 
   final List<String> _categories = ['Semua', 'Makanan', 'Minuman', 'Camilan'];
@@ -67,7 +61,7 @@ class _WarungHomeScreenState extends State<WarungHomeScreen> {
     super.dispose();
   }
 
-  // Filter menu berdasarkan query pencarian dan kategori terpilih
+  // Filter menu berdasarkan pencarian & kategori
   List<MenuItem> get _filteredMenus {
     return _allMenus.where((menu) {
       final matchesSearch = menu.namaMenu.toLowerCase().contains(
@@ -79,25 +73,13 @@ class _WarungHomeScreenState extends State<WarungHomeScreen> {
     }).toList();
   }
 
-  // Hitung total harga seluruh pesanan (Tantangan Khas 1)
-  double get _totalHargaKeseluruhan {
-    double total = 0.0;
-    for (var menu in _allMenus) {
-      final int qty = _orderCart[menu.namaMenu] ?? 0;
-      if (qty > 0) {
-        total += hitungSubtotalMenu(harga: menu.harga, jumlahPorsi: qty);
-      }
+  // Total Porsi dalam keranjang
+  int get _totalPorsiKeseluruhan {
+    int total = 0;
+    for (var qty in _orderCart.values) {
+      total += qty;
     }
     return total;
-  }
-
-  // Hitung total porsi item yang dipesan
-  int get _totalPorsiKeseluruhan {
-    int totalPorsi = 0;
-    for (var qty in _orderCart.values) {
-      totalPorsi += qty;
-    }
-    return totalPorsi;
   }
 
   void _updateJumlahPesanan(MenuItem item, int newQty) {
@@ -110,400 +92,668 @@ class _WarungHomeScreenState extends State<WarungHomeScreen> {
     });
   }
 
-  void _resetPesanan() {
+  // Selesaikan Transaksi: Kurangi stok pada _allMenus & kosongkan cart
+  void _selesaikanTransaksi(Map<String, int> boughtItems) {
     setState(() {
+      for (int i = 0; i < _allMenus.length; i++) {
+        final menu = _allMenus[i];
+        final qtyDibeli = boughtItems[menu.namaMenu] ?? 0;
+        if (qtyDibeli > 0) {
+          final sisaBaru = (menu.porsiTersisa - qtyDibeli).clamp(0, 99999);
+          _allMenus[i] = menu.copyWith(
+            porsiTersisa: sisaBaru,
+            tersedia: sisaBaru > 0,
+          );
+        }
+      }
       _orderCart.clear();
     });
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Daftar pesanan berhasil direset.'),
-        backgroundColor: Colors.teal,
+  }
+
+  // Buka Halaman Ringkasan Pesanan & Sinkronkan Cart
+  Future<void> _bukaHalamanRingkasan() async {
+    final updatedCart = await Navigator.push<Map<String, int>>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => RingkasanPesananPage(
+          allMenus: _allMenus,
+          initialCart: _orderCart,
+          onTransaksiSelesai: _selesaikanTransaksi,
+        ),
       ),
     );
+
+    if (updatedCart != null) {
+      setState(() {
+        _orderCart.clear();
+        _orderCart.addAll(updatedCart);
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final filteredList = _filteredMenus;
-
     return Scaffold(
-      appBar: AppBar(
-        title: const Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Warung Selera Nusantara',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            Text(
-              'Daftar Menu & Penghitung Pesanan Kasir',
-              style: TextStyle(fontSize: 12, color: Colors.white70),
-            ),
-          ],
-        ),
-        actions: [
-          if (_orderCart.isNotEmpty)
-            IconButton(
-              tooltip: 'Reset Pesanan',
-              icon: const Icon(Icons.refresh),
-              onPressed: _resetPesanan,
-            ),
-        ],
+      backgroundColor: const Color(0xFFF3F4F6),
+      appBar: _buildAppBar(),
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          if (constraints.maxWidth >= 1000) {
+            return _buildDesktopLayout(constraints);
+          }
+          return _buildMobileLayout(constraints);
+        },
       ),
-      body: Column(
+    );
+  }
+
+  // App Bar Navigasi Sesuai Mockup
+  PreferredSizeWidget _buildAppBar() {
+    return AppBar(
+      backgroundColor: Colors.white,
+      elevation: 0,
+      surfaceTintColor: Colors.transparent,
+      titleSpacing: 24,
+      title: Row(
         children: [
-          // 1. Kotak Pencarian (Khas 2: menyaring berdasarkan nama menu)
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
-            child: TextField(
-              controller: _searchController,
-              onChanged: (val) {
-                setState(() {
-                  _searchQuery = val;
-                });
-              },
-              decoration: InputDecoration(
-                hintText: 'Cari nama menu makanan / minuman...',
-                prefixIcon: const Icon(Icons.search, color: Colors.teal),
-                suffixIcon: _searchQuery.isNotEmpty
-                    ? IconButton(
-                        icon: const Icon(Icons.clear, color: Colors.grey),
-                        onPressed: () {
-                          _searchController.clear();
-                          setState(() {
-                            _searchQuery = '';
-                          });
-                        },
-                      )
-                    : null,
-                filled: true,
-                fillColor: Colors.white,
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
-                ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(14),
-                  borderSide: BorderSide(color: Colors.teal.shade200),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(14),
-                  borderSide: BorderSide(color: Colors.grey.shade300),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(14),
-                  borderSide: BorderSide(color: Colors.teal.shade600, width: 2),
-                ),
-              ),
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: const Color(0xFFDCFCE7),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: const Icon(
+              Icons.restaurant,
+              color: Color(0xFF16A34A),
+              size: 22,
             ),
           ),
-
-          // 2. [Bagian Pilihan: Fitur F2 - Saring Kategori]
-          SizedBox(
-            height: 44,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              itemCount: _categories.length,
-              separatorBuilder: (context, index) => const SizedBox(width: 8),
-              itemBuilder: (context, index) {
-                final cat = _categories[index];
-                final isSelected = _selectedCategory == cat;
-                return ChoiceChip(
-                  label: Text(cat),
-                  selected: isSelected,
-                  selectedColor: Colors.teal.shade700,
-                  labelStyle: TextStyle(
-                    color: isSelected ? Colors.white : Colors.teal.shade900,
-                    fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                  ),
-                  backgroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
-                    side: BorderSide(
-                      color: isSelected ? Colors.teal.shade700 : Colors.teal.shade100,
-                    ),
-                  ),
-                  onSelected: (selected) {
-                    setState(() {
-                      _selectedCategory = cat;
-                    });
-                  },
-                );
-              },
-            ),
-          ),
-          const SizedBox(height: 8),
-
-          // 3. Expanded > LayoutBuilder > GridView.builder (Ketentuan Responsif Seragam)
-          Expanded(
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                // Aturan Responsif:
-                // < 600 : 1 kolom
-                // 600 - 899 : 2 kolom
-                // >= 900 : 3 kolom
-                int crossAxisCount = 1;
-                double childAspectRatio = 2.0;
-
-                if (constraints.maxWidth < 600) {
-                  crossAxisCount = 1;
-                  // Memberi ruang vertikal yang cukup untuk kartu menu (mencegah overflow)
-                  childAspectRatio = constraints.maxWidth > 420 ? 2.2 : (constraints.maxWidth > 350 ? 1.85 : 1.65);
-                } else if (constraints.maxWidth <= 899) {
-                  crossAxisCount = 2;
-                  childAspectRatio = 1.35;
-                } else {
-                  crossAxisCount = 3;
-                  childAspectRatio = 1.3;
-                }
-
-                // Tampilan jika hasil pencarian atau filter kosong
-                if (filteredList.isEmpty) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.search_off_rounded,
-                          size: 64,
-                          color: Colors.grey.shade400,
-                        ),
-                        const SizedBox(height: 12),
-                        Text(
-                          'Menu "$_searchQuery" tidak ditemukan',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.grey.shade700,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Silakan coba kata kunci atau kategori lain',
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: Colors.grey.shade500,
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                }
-
-                return GridView.builder(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: crossAxisCount,
-                    childAspectRatio: childAspectRatio,
-                    crossAxisSpacing: 8,
-                    mainAxisSpacing: 8,
-                  ),
-                  itemCount: filteredList.length,
-                  itemBuilder: (context, index) {
-                    final item = filteredList[index];
-                    final orderQty = _orderCart[item.namaMenu] ?? 0;
-
-                    // Memanggil Komponen Stateless Kustom MenuCard
-                    return MenuCard(
-                      item: item,
-                      jumlahPesanan: orderQty,
-                      onPorsiChanged: (newQty) => _updateJumlahPesanan(item, newQty),
-                    );
-                  },
-                );
-              },
-            ),
-          ),
-
-          // 4. [Tantangan Khas 1] Total Seluruh Pesanan pada bagian bawah layar
-          _buildBottomSummaryBar(),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildBottomSummaryBar() {
-    final double totalHarga = _totalHargaKeseluruhan;
-    final int totalPorsi = _totalPorsiKeseluruhan;
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.08),
-            offset: const Offset(0, -3),
-            blurRadius: 10,
-          ),
-        ],
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(20),
-          topRight: Radius.circular(20),
-        ),
-      ),
-      child: SafeArea(
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Row(
-                  children: [
-                    const Icon(Icons.receipt_long, size: 16, color: Colors.teal),
-                    const SizedBox(width: 4),
-                    Text(
-                      'Total Pesanan ($totalPorsi porsi):',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey.shade700,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  formatRupiah(totalHarga),
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.teal.shade900,
-                  ),
-                ),
-              ],
-            ),
-            ElevatedButton.icon(
-              onPressed: totalPorsi > 0
-                  ? () {
-                      _showCheckoutDialog(context, totalHarga, totalPorsi);
-                    }
-                  : null,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.teal.shade800,
-                foregroundColor: Colors.white,
-                disabledBackgroundColor: Colors.grey.shade300,
-                disabledForegroundColor: Colors.grey.shade500,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 12,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              icon: const Icon(Icons.shopping_bag_outlined, size: 18),
-              label: const Text(
-                'Selesai Pesan',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showCheckoutDialog(BuildContext context, double totalHarga, int totalPorsi) {
-    showDialog(
-      context: context,
-      builder: (ctx) {
-        return AlertDialog(
-          title: const Row(
+          const SizedBox(width: 12),
+          const Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.check_circle_outline, color: Colors.teal),
-              SizedBox(width: 8),
-              Text('Ringkasan Nota Pesanan'),
+              Text(
+                'Piring Penuh',
+                style: TextStyle(
+                  color: Color(0xFF1F2937),
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              Text(
+                'Sistem Kasir Restoran',
+                style: TextStyle(
+                  color: Color(0xFF6B7280),
+                  fontSize: 11,
+                ),
+              ),
             ],
           ),
-          content: SizedBox(
-            width: double.maxFinite,
-            child: Column(
+        ],
+      ),
+      actions: [
+        Builder(
+          builder: (context) {
+            final isSmall = MediaQuery.of(context).size.width < 600;
+            return Row(
               mainAxisSize: MainAxisSize.min,
+              children: [
+                const CircleAvatar(
+                  radius: 14,
+                  backgroundColor: Color(0xFFE5E7EB),
+                  child: Icon(Icons.person, size: 18, color: Color(0xFF4B5563)),
+                ),
+                if (!isSmall) ...[
+                  const SizedBox(width: 8),
+                  const Text(
+                    'Kasir',
+                    style: TextStyle(
+                      color: Color(0xFF1F2937),
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const Icon(
+                    Icons.keyboard_arrow_down,
+                    size: 18,
+                    color: Color(0xFF6B7280),
+                  ),
+                ],
+                const SizedBox(width: 16),
+              ],
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  // Layout Desktop (Sidebar + Konten Grid)
+  Widget _buildDesktopLayout(BoxConstraints constraints) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Sidebar
+        _buildSidebar(),
+
+        // Konten Menu
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Judul Halaman
                 const Text(
-                  'Daftar menu yang dipesan:',
-                  style: TextStyle(fontWeight: FontWeight.bold),
+                  'Menu',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF1F2937),
+                  ),
                 ),
-                const Divider(),
-                ..._orderCart.entries.map((entry) {
-                  final menu = _allMenus.firstWhere((m) => m.namaMenu == entry.key);
-                  final sub = hitungSubtotalMenu(
-                    harga: menu.harga,
-                    jumlahPorsi: entry.value,
-                  );
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 3.0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Expanded(
-                          child: Text(
-                            '${entry.value}x ${menu.namaMenu}${entry.value >= 5 ? ' (Disc 10%)' : ''}',
-                            style: const TextStyle(fontSize: 13),
-                          ),
-                        ),
-                        Text(
-                          formatRupiah(sub),
-                          style: const TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                }),
-                const Divider(),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      'Total Bayar:',
-                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-                    ),
-                    Text(
-                      formatRupiah(totalHarga),
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.teal.shade900,
+                const SizedBox(height: 2),
+                const Text(
+                  'Pilih menu yang ingin dipesan',
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: Color(0xFF6B7280),
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                // Baris Pencarian
+                _buildSearchBar(),
+                const SizedBox(height: 14),
+
+                // Kategori Chips
+                _buildCategoryChips(),
+                const SizedBox(height: 18),
+
+                // Grid Menu
+                Expanded(
+                  child: Stack(
+                    children: [
+                      _buildMenuGrid(constraints),
+
+                      // Tombol Mengambang "Lihat Pesanan" di pojok kanan bawah
+                      Positioned(
+                        right: 16,
+                        bottom: 16,
+                        child: _buildFloatingOrderButton(),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ],
             ),
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: const Text('Tutup'),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.teal.shade800,
-                foregroundColor: Colors.white,
+        ),
+      ],
+    );
+  }
+
+  // Layout Mobile/Tablet (< 1000px)
+  Widget _buildMobileLayout(BoxConstraints constraints) {
+    final filtered = _filteredMenus;
+    final bool isMobile = constraints.maxWidth < 600;
+    final int totalJenisMenu = _orderCart.values.where((qty) => qty > 0).length;
+
+    return Stack(
+      children: [
+        // Konten utama dengan padding bawah agar tidak tertutup sticky button
+        Padding(
+          padding: EdgeInsets.fromLTRB(16, 16, 16, isMobile ? 0 : 0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Menu',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF1F2937),
+                ),
               ),
-              onPressed: () {
-                Navigator.pop(ctx);
-                _resetPesanan();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Pesanan berhasil diproses ke kasir!'),
-                    backgroundColor: Colors.green,
+              const SizedBox(height: 2),
+              const Text(
+                'Pilih menu yang ingin dipesan',
+                style: TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
+              ),
+              const SizedBox(height: 12),
+              _buildSearchBar(),
+              const SizedBox(height: 12),
+              _buildCategoryChips(),
+              const SizedBox(height: 14),
+
+              // List / Grid Menu
+              Expanded(
+                child: filtered.isEmpty
+                    ? _buildEmptyState()
+                    : isMobile
+                        ? ListView.builder(
+                            // Padding bawah agar tidak tertutup sticky button
+                            padding: const EdgeInsets.only(bottom: 80),
+                            itemCount: filtered.length,
+                            itemBuilder: (context, index) {
+                              final item = filtered[index];
+                              final qty = _orderCart[item.namaMenu] ?? 0;
+                              return MenuCard(
+                                item: item,
+                                jumlahPesanan: qty,
+                                isHorizontal: true,
+                                onPorsiChanged: (newQty) =>
+                                    _updateJumlahPesanan(item, newQty),
+                              );
+                            },
+                          )
+                        : GridView.builder(
+                            padding: const EdgeInsets.only(bottom: 80),
+                            gridDelegate:
+                                const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 2,
+                              childAspectRatio: 0.78,
+                              crossAxisSpacing: 12,
+                              mainAxisSpacing: 12,
+                            ),
+                            itemCount: filtered.length,
+                            itemBuilder: (context, index) {
+                              final item = filtered[index];
+                              final qty = _orderCart[item.namaMenu] ?? 0;
+                              return MenuCard(
+                                item: item,
+                                jumlahPesanan: qty,
+                                onPorsiChanged: (newQty) =>
+                                    _updateJumlahPesanan(item, newQty),
+                              );
+                            },
+                          ),
+              ),
+            ],
+          ),
+        ),
+
+        // Sticky Bottom Button "Lihat Pesanan"
+        Positioned(
+          left: 0,
+          right: 0,
+          bottom: 0,
+          child: Container(
+            decoration: BoxDecoration(
+              color: const Color(0xFFF3F4F6),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.08),
+                  blurRadius: 12,
+                  offset: const Offset(0, -3),
+                ),
+              ],
+            ),
+            padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
+            child: SafeArea(
+              top: false,
+              child: SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: _bukaHalamanRingkasan,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF16A34A),
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.shopping_cart, size: 20),
+                      const SizedBox(width: 10),
+                      Text(
+                        totalJenisMenu > 0
+                            ? 'Lihat Pesanan ($totalJenisMenu)'
+                            : 'Lihat Pesanan',
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // Sidebar Desktop
+  Widget _buildSidebar() {
+    return Container(
+      width: 220,
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        border: Border(
+          right: BorderSide(color: Color(0xFFE5E7EB)),
+        ),
+      ),
+      child: Column(
+        children: [
+          const SizedBox(height: 20),
+          _sidebarItem(
+            icon: Icons.home,
+            title: 'Menu',
+            active: true,
+            onTap: () {},
+          ),
+          const SizedBox(height: 6),
+          _sidebarItem(
+            icon: Icons.shopping_cart_outlined,
+            title: 'Pesanan',
+            active: false,
+            badgeCount: _totalPorsiKeseluruhan,
+            onTap: _bukaHalamanRingkasan,
+          ),
+          const Spacer(),
+
+          // Ilustrasi & Motto di bagian bawah sidebar
+          Container(
+            margin: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF0FDF4),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: const Color(0xFFDCFCE7)),
+            ),
+            child: Column(
+              children: [
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFDCFCE7),
+                    borderRadius: BorderRadius.circular(22),
+                  ),
+                  child: const Icon(
+                    Icons.restaurant_menu,
+                    color: Color(0xFF16A34A),
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Piring Penuh',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13,
+                    color: Color(0xFF16A34A),
+                  ),
+                ),
+                const SizedBox(height: 2),
+                const Text(
+                  'Lezat dan Sehat\nSetiap Hari',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: Color(0xFF6B7280),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _sidebarItem({
+    required IconData icon,
+    required String title,
+    required bool active,
+    int badgeCount = 0,
+    required VoidCallback onTap,
+  }) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 12),
+      child: Material(
+        color: active ? const Color(0xFF16A34A) : Colors.transparent,
+        borderRadius: BorderRadius.circular(10),
+        child: ListTile(
+          onTap: onTap,
+          dense: true,
+          leading: Icon(
+            icon,
+            color: active ? Colors.white : const Color(0xFF6B7280),
+            size: 20,
+          ),
+          title: Text(
+            title,
+            style: TextStyle(
+              color: active ? Colors.white : const Color(0xFF1F2937),
+              fontWeight: active ? FontWeight.bold : FontWeight.w500,
+              fontSize: 14,
+            ),
+          ),
+          trailing: badgeCount > 0
+              ? Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: active ? Colors.white : const Color(0xFF16A34A),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    '$badgeCount',
+                    style: TextStyle(
+                      color: active ? const Color(0xFF16A34A) : Colors.white,
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                )
+              : null,
+        ),
+      ),
+    );
+  }
+
+  // Kotak Pencarian Sesuai Mockup
+  Widget _buildSearchBar() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
+      ),
+      child: TextField(
+        controller: _searchController,
+        onChanged: (val) {
+          setState(() {
+            _searchQuery = val;
+          });
+        },
+        decoration: InputDecoration(
+          hintText: 'Cari menu...',
+          hintStyle: const TextStyle(fontSize: 13, color: Color(0xFF9CA3AF)),
+          prefixIcon: const Icon(Icons.search, color: Color(0xFF9CA3AF), size: 20),
+          suffixIcon: _searchQuery.isNotEmpty
+              ? IconButton(
+                  icon: const Icon(Icons.clear, size: 18, color: Color(0xFF9CA3AF)),
+                  onPressed: () {
+                    _searchController.clear();
+                    setState(() {
+                      _searchQuery = '';
+                    });
+                  },
+                )
+              : null,
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        ),
+      ),
+    );
+  }
+
+  // Kategori Chips Sesuai Mockup
+  Widget _buildCategoryChips() {
+    return Row(
+      children: [
+        Expanded(
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: _categories.map((cat) {
+                final isSelected = _selectedCategory == cat;
+                return Padding(
+                  padding: const EdgeInsets.only(right: 8.0),
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(20),
+                    onTap: () {
+                      setState(() {
+                        _selectedCategory = cat;
+                      });
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: isSelected ? const Color(0xFF16A34A) : Colors.white,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: isSelected
+                              ? const Color(0xFF16A34A)
+                              : const Color(0xFFE5E7EB),
+                        ),
+                      ),
+                      child: Text(
+                        cat,
+                        style: TextStyle(
+                          color: isSelected ? Colors.white : const Color(0xFF4B5563),
+                          fontSize: 13,
+                          fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                        ),
+                      ),
+                    ),
                   ),
                 );
-              },
-              child: const Text('Proses Bayar'),
+              }).toList(),
             ),
-          ],
+          ),
+        ),
+        const Padding(
+          padding: EdgeInsets.only(left: 4),
+          child: Icon(
+            Icons.chevron_right,
+            size: 20,
+            color: Color(0xFF9CA3AF),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // Grid Menu Desktop
+  Widget _buildMenuGrid(BoxConstraints constraints) {
+    final filtered = _filteredMenus;
+
+    if (filtered.isEmpty) {
+      return _buildEmptyState();
+    }
+
+    // Hitung jumlah kolom berdasarkan lebar ruang konten
+    final double contentWidth = constraints.maxWidth - 220; // Dikurangi sidebar
+    int crossAxisCount = 4;
+    if (contentWidth < 800) {
+      crossAxisCount = 2;
+    } else if (contentWidth < 1100) {
+      crossAxisCount = 3;
+    }
+
+    return GridView.builder(
+      padding: const EdgeInsets.only(bottom: 70),
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: crossAxisCount,
+        childAspectRatio: 0.76,
+        crossAxisSpacing: 14,
+        mainAxisSpacing: 14,
+      ),
+      itemCount: filtered.length,
+      itemBuilder: (context, index) {
+        final item = filtered[index];
+        final qty = _orderCart[item.namaMenu] ?? 0;
+        return MenuCard(
+          item: item,
+          jumlahPesanan: qty,
+          onPorsiChanged: (newQty) => _updateJumlahPesanan(item, newQty),
         );
       },
     );
   }
+
+  // Empty State jika pencarian tidak ditemukan
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(
+            Icons.search_off_rounded,
+            size: 56,
+            color: Color(0xFF9CA3AF),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'Menu "$_searchQuery" tidak ditemukan',
+            style: const TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF4B5563),
+            ),
+          ),
+          const SizedBox(height: 4),
+          const Text(
+            'Coba kata kunci atau kategori lain',
+            style: TextStyle(fontSize: 12, color: Color(0xFF9CA3AF)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Tombol Mengambang "Lihat Pesanan" (Desktop)
+  Widget _buildFloatingOrderButton() {
+    final totalQty = _totalPorsiKeseluruhan;
+
+    return ElevatedButton.icon(
+      onPressed: _bukaHalamanRingkasan,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: const Color(0xFF16A34A),
+        foregroundColor: Colors.white,
+        elevation: 4,
+        shadowColor: const Color(0xFF16A34A).withValues(alpha: 0.4),
+        padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 16),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+      ),
+      icon: Badge(
+        isLabelVisible: totalQty > 0,
+        label: Text('$totalQty'),
+        backgroundColor: Colors.white,
+        textColor: const Color(0xFF16A34A),
+        child: const Icon(Icons.shopping_cart, size: 20),
+      ),
+      label: const Text(
+        'Lihat Pesanan',
+        style: TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    );
+  }
 }
+
