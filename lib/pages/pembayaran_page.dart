@@ -217,10 +217,15 @@ class _PembayaranPageState extends State<PembayaranPage> {
               color: const Color(0xFFDCFCE7),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: const Icon(
-              Icons.restaurant,
-              color: Color(0xFF16A34A),
-              size: 22,
+            clipBehavior: Clip.antiAlias,
+            child: Image.asset(
+              'assets/images/logo/piring_penuh.png',
+              fit: BoxFit.cover,
+              errorBuilder: (_, _, _) => const Icon(
+                Icons.restaurant,
+                color: Color(0xFF16A34A),
+                size: 22,
+              ),
             ),
           ),
           const SizedBox(width: 12),
@@ -450,10 +455,15 @@ class _PembayaranPageState extends State<PembayaranPage> {
                     color: const Color(0xFFDCFCE7),
                     borderRadius: BorderRadius.circular(22),
                   ),
-                  child: const Icon(
-                    Icons.restaurant_menu,
-                    color: Color(0xFF16A34A),
-                    size: 24,
+                  clipBehavior: Clip.antiAlias,
+                  child: Image.asset(
+                    'assets/images/logo/piring_penuh.png',
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, _, _) => const Icon(
+                      Icons.restaurant_menu,
+                      color: Color(0xFF16A34A),
+                      size: 24,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -647,7 +657,7 @@ class _PembayaranPageState extends State<PembayaranPage> {
                       width: 48,
                       height: 48,
                       child: item.imageUrl.isNotEmpty
-                          ? Image.network(
+                          ? Image.asset(
                               item.imageUrl,
                               fit: BoxFit.cover,
                               errorBuilder: (context, error, stackTrace) => _imagePlaceholder(),

@@ -227,10 +227,15 @@ class _RingkasanPesananPageState extends State<RingkasanPesananPage> {
               color: const Color(0xFFDCFCE7),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: const Icon(
-              Icons.restaurant,
-              color: Color(0xFF16A34A),
-              size: 22,
+            clipBehavior: Clip.antiAlias,
+            child: Image.asset(
+              'assets/images/logo/piring_penuh.png',
+              fit: BoxFit.cover,
+              errorBuilder: (_, _, _) => const Icon(
+                Icons.restaurant,
+                color: Color(0xFF16A34A),
+                size: 22,
+              ),
             ),
           ),
           const SizedBox(width: 12),
@@ -1093,7 +1098,7 @@ class _RingkasanPesananPageState extends State<RingkasanPesananPage> {
                   width: 44,
                   height: 44,
                   child: item.imageUrl.isNotEmpty
-                      ? Image.network(
+                      ? Image.asset(
                           item.imageUrl,
                           fit: BoxFit.cover,
                           errorBuilder: (_, _, _) => _imagePlaceholder(),
@@ -1299,7 +1304,7 @@ class _RingkasanPesananPageState extends State<RingkasanPesananPage> {
               width: 58,
               height: 58,
               child: item.imageUrl.isNotEmpty
-                  ? Image.network(
+                  ? Image.asset(
                       item.imageUrl,
                       fit: BoxFit.cover,
                       errorBuilder: (context, error, stackTrace) => _imagePlaceholder(),
