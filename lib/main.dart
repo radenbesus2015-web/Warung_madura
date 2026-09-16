@@ -96,8 +96,27 @@ class _PiringPenuhHomeScreenState extends State<PiringPenuhHomeScreen> {
       if (newPorsi <= 0) {
         _cart.remove(item.namaMenu);
       } else {
-        _cart[item.namaMenu] = newPorsi;
+        final maxBoleh = item.porsiTersisa;
+        _cart[item.namaMenu] = newPorsi > maxBoleh ? maxBoleh : newPorsi;
       }
+    });
+  }
+
+  // Pengurangan stok menu saat transaksi pembayaran berhasil diselesaikan
+  void _kurangiStokMenu(Map<String, int> boughtItems) {
+    setState(() {
+      for (int i = 0; i < _menuList.length; i++) {
+        final item = _menuList[i];
+        final qtyBought = boughtItems[item.namaMenu] ?? 0;
+        if (qtyBought > 0) {
+          final int sisaBaru = (item.porsiTersisa - qtyBought).clamp(0, 9999);
+          _menuList[i] = item.copyWith(
+            porsiTersisa: sisaBaru,
+            tersedia: sisaBaru > 0,
+          );
+        }
+      }
+      _cart.clear();
     });
   }
 
@@ -109,13 +128,20 @@ class _PiringPenuhHomeScreenState extends State<PiringPenuhHomeScreen> {
         builder: (context) => RingkasanPesananPage(
           allMenus: _menuList,
           initialCart: _cart,
-          onTransaksiSelesai: (_) => setState(() => _cart.clear()),
+          onTransaksiSelesai: _kurangiStokMenu,
         ),
       ),
-    ).then((_) {
+    ).then((result) {
       if (mounted) {
         _searchFocusNode.unfocus();
-        setState(() {});
+        if (result is Map<String, int>) {
+          setState(() {
+            _cart.clear();
+            _cart.addAll(result);
+          });
+        } else {
+          setState(() {});
+        }
       }
     });
   }
