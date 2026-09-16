@@ -24,10 +24,16 @@ class RingkasanAtasBar extends StatelessWidget {
       totalPorsiTersedia += item.porsiTersisa;
     }
 
+    final isLandscape =
+        MediaQuery.of(context).orientation == Orientation.landscape;
+
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: isDesktop ? 24 : 16),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        padding: EdgeInsets.symmetric(
+          horizontal: 14,
+          vertical: isLandscape ? 4 : 8,
+        ),
         decoration: BoxDecoration(
           color: const Color(0xFFF0FDF4),
           borderRadius: BorderRadius.circular(10),

@@ -24,6 +24,8 @@ class SearchBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isLandscape =
+        MediaQuery.of(context).orientation == Orientation.landscape;
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: isDesktop ? 24 : 16),
       child: Container(
@@ -59,8 +61,8 @@ class SearchBox extends StatelessWidget {
                   )
                 : null,
             border: InputBorder.none,
-            contentPadding: const EdgeInsets.symmetric(
-              vertical: 14,
+            contentPadding: EdgeInsets.symmetric(
+              vertical: isLandscape ? 8 : 14,
               horizontal: 16,
             ),
           ),

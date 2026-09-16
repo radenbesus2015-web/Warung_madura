@@ -26,14 +26,32 @@ class MenuGridView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final orientation = MediaQuery.of(context).orientation;
+    final isLandscapeMobile = !isDesktop && orientation == Orientation.landscape;
+
     return Expanded(
       child: LayoutBuilder(
         builder: (context, constraints) {
           final double width = constraints.maxWidth;
-          final int crossAxisCount = isDesktop ? 3 : (width < 600 ? 1 : 2);
-          final double childAspectRatio =
-              isDesktop ? 1.05 : (width < 600 ? 3.6 : 1.0);
-          final bool isMobileHorizontal = !isDesktop && width < 600;
+          final bool isPortraitMobile = !isDesktop && width < 500;
+
+          final int crossAxisCount = isDesktop
+              ? 3
+              : isPortraitMobile
+                  ? 1
+                  : isLandscapeMobile
+                      ? 2
+                      : 2;
+
+          final double childAspectRatio = isDesktop
+              ? 1.05
+              : isPortraitMobile
+                  ? 3.6
+                  : isLandscapeMobile
+                      ? 3.3
+                      : 1.0;
+
+          final bool isMobileHorizontal = isPortraitMobile || isLandscapeMobile;
 
           if (items.isEmpty) return const EmptyMenuState();
 
@@ -46,8 +64,8 @@ class MenuGridView extends StatelessWidget {
             ),
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: crossAxisCount,
-              crossAxisSpacing: 16,
-              mainAxisSpacing: 16,
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 12,
               childAspectRatio: childAspectRatio,
             ),
             itemCount: items.length,

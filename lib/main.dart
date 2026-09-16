@@ -141,13 +141,20 @@ class _PiringPenuhHomeScreenState extends State<PiringPenuhHomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final orientation = MediaQuery.of(context).orientation;
+
     return LayoutBuilder(
       builder: (context, constraints) {
         final isDesktop = constraints.maxWidth >= 900;
+        final isLandscapeMobile =
+            !isDesktop && orientation == Orientation.landscape;
 
         return Scaffold(
           backgroundColor: const Color(0xFFF9FAFB),
-          appBar: TopAppBar(isDesktop: isDesktop),
+          appBar: TopAppBar(
+            isDesktop: isDesktop,
+            isLandscapeMobile: isLandscapeMobile,
+          ),
           body: GestureDetector(
             onTap: () {
               _searchFocusNode.unfocus();
@@ -177,8 +184,12 @@ class _PiringPenuhHomeScreenState extends State<PiringPenuhHomeScreen> {
     );
   }
 
+
   // Kerangka Antarmuka Wajib: Column -> TextField -> F1/F2/F3 -> Expanded -> LayoutBuilder -> GridView
   Widget _buildMainContent(bool isDesktop) {
+    final orientation = MediaQuery.of(context).orientation;
+    final isLandscapeMobile = !isDesktop && orientation == Orientation.landscape;
+
     return Stack(
       children: [
         Column(
@@ -187,29 +198,39 @@ class _PiringPenuhHomeScreenState extends State<PiringPenuhHomeScreen> {
             Padding(
               padding: EdgeInsets.fromLTRB(
                 isDesktop ? 24 : 16,
-                18,
+                isLandscapeMobile ? 8 : 18,
                 isDesktop ? 24 : 16,
-                12,
+                isLandscapeMobile ? 6 : 12,
               ),
-              child: const Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Menu',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.w800,
-                      color: Color(0xFF111827),
-                      letterSpacing: -0.5,
+              child: isLandscapeMobile
+                  ? const Text(
+                      'Menu',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF111827),
+                        letterSpacing: -0.5,
+                      ),
+                    )
+                  : const Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Menu',
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.w800,
+                            color: Color(0xFF111827),
+                            letterSpacing: -0.5,
+                          ),
+                        ),
+                        SizedBox(height: 3),
+                        Text(
+                          'Pilih menu yang ingin dipesan',
+                          style: TextStyle(fontSize: 13, color: Color(0xFF6B7280)),
+                        ),
+                      ],
                     ),
-                  ),
-                  SizedBox(height: 3),
-                  Text(
-                    'Pilih menu yang ingin dipesan',
-                    style: TextStyle(fontSize: 13, color: Color(0xFF6B7280)),
-                  ),
-                ],
-              ),
             ),
             SearchBox(
               controller: _searchController,
@@ -222,7 +243,7 @@ class _PiringPenuhHomeScreenState extends State<PiringPenuhHomeScreen> {
                 setState(() => _searchQuery = '');
               },
             ),
-            const SizedBox(height: 14),
+            SizedBox(height: isLandscapeMobile ? 8 : 14),
             KategoriDanSortBar(
               categories: _categories,
               selectedCategory: _selectedCategory,
@@ -231,12 +252,12 @@ class _PiringPenuhHomeScreenState extends State<PiringPenuhHomeScreen> {
               onCategorySelected: (cat) => setState(() => _selectedCategory = cat),
               onSortSelected: (sort) => setState(() => _sortOption = sort),
             ),
-            const SizedBox(height: 10),
+            SizedBox(height: isLandscapeMobile ? 6 : 10),
             RingkasanAtasBar(
               filteredMenu: _filteredMenu,
               isDesktop: isDesktop,
             ),
-            const SizedBox(height: 10),
+            SizedBox(height: isLandscapeMobile ? 6 : 10),
             MenuGridView(
               items: _filteredMenu,
               cart: _cart,

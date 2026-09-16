@@ -6,26 +6,38 @@ import 'package:flutter/material.dart';
 
 class TopAppBar extends StatelessWidget implements PreferredSizeWidget {
   final bool isDesktop;
+  final bool isLandscapeMobile;
 
-  const TopAppBar({super.key, required this.isDesktop});
+  const TopAppBar({
+    super.key,
+    required this.isDesktop,
+    this.isLandscapeMobile = false,
+  });
+
+  double get _toolbarHeight =>
+      isLandscapeMobile ? 44.0 : kToolbarHeight;
 
   @override
-  Size get preferredSize => const Size.fromHeight(kToolbarHeight + 1);
+  Size get preferredSize => Size.fromHeight(_toolbarHeight + 1);
 
   @override
   Widget build(BuildContext context) {
+    final logoSize = isLandscapeMobile ? 28.0 : 36.0;
+    final titleSpacing = isLandscapeMobile ? 8.0 : (isDesktop ? 24.0 : 16.0);
+
     return AppBar(
       elevation: 0,
       backgroundColor: Colors.white,
-      titleSpacing: isDesktop ? 24 : 16,
+      toolbarHeight: _toolbarHeight,
+      titleSpacing: titleSpacing,
       title: Row(
         children: [
           Container(
-            width: 36,
-            height: 36,
+            width: logoSize,
+            height: logoSize,
             decoration: BoxDecoration(
               color: const Color(0xFFDCFCE7),
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(8),
             ),
             clipBehavior: Clip.antiAlias,
             child: Image.asset(
@@ -34,38 +46,40 @@ class TopAppBar extends StatelessWidget implements PreferredSizeWidget {
               errorBuilder: (_, _, _) => const Icon(
                 Icons.restaurant_menu,
                 color: Color(0xFF16A34A),
-                size: 22,
+                size: 20,
               ),
             ),
           ),
-          const SizedBox(width: 12),
-          const Column(
+          SizedBox(width: isLandscapeMobile ? 8 : 12),
+          Column(
             crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
             children: [
               Text(
                 'Piring Penuh',
                 style: TextStyle(
-                  color: Color(0xFF111827),
-                  fontSize: 18,
+                  color: const Color(0xFF111827),
+                  fontSize: isLandscapeMobile ? 15 : 18,
                   fontWeight: FontWeight.w800,
                   letterSpacing: -0.3,
                 ),
               ),
-              Text(
-                'Sistem Kasir Restoran',
-                style: TextStyle(
-                  color: Color(0xFF6B7280),
-                  fontSize: 12,
-                  fontWeight: FontWeight.w400,
+              if (!isLandscapeMobile)
+                const Text(
+                  'Sistem Kasir Restoran',
+                  style: TextStyle(
+                    color: Color(0xFF6B7280),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w400,
+                  ),
                 ),
-              ),
             ],
           ),
         ],
       ),
       actions: [
         Padding(
-          padding: EdgeInsets.only(right: isDesktop ? 20 : 16),
+          padding: EdgeInsets.only(right: isDesktop ? 20 : 12),
           child: isDesktop
               ? Container(
                   padding: const EdgeInsets.symmetric(

@@ -24,6 +24,11 @@ class KategoriDanSortBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isLandscape =
+        MediaQuery.of(context).orientation == Orientation.landscape;
+    final double chipPadV = isLandscape ? 5 : 8;
+    final double chipPadH = isLandscape ? 14 : 18;
+
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: isDesktop ? 24 : 16),
       child: SingleChildScrollView(
@@ -39,9 +44,9 @@ class KategoriDanSortBar extends StatelessWidget {
                   borderRadius: BorderRadius.circular(20),
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 150),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 18,
-                      vertical: 8,
+                    padding: EdgeInsets.symmetric(
+                      horizontal: chipPadH,
+                      vertical: chipPadV,
                     ),
                     decoration: BoxDecoration(
                       color: isSelected
@@ -131,9 +136,9 @@ class KategoriDanSortBar extends StatelessWidget {
                 ),
               ],
               child: Container(
-                padding: const EdgeInsets.symmetric(
+                padding: EdgeInsets.symmetric(
                   horizontal: 14,
-                  vertical: 8,
+                  vertical: chipPadV,
                 ),
                 decoration: BoxDecoration(
                   color: sortOption != 'Default'
