@@ -52,7 +52,7 @@ class _PiringPenuhHomeScreenState extends State<PiringPenuhHomeScreen> {
     super.initState();
     _menuList = List<MenuItem>.from(dummyMenuList);
     _searchController = TextEditingController();
-    _searchFocusNode = FocusNode();
+    _searchFocusNode = FocusNode(skipTraversal: true);
   }
 
   @override
@@ -275,8 +275,22 @@ class _PiringPenuhHomeScreenState extends State<PiringPenuhHomeScreen> {
               selectedCategory: _selectedCategory,
               sortOption: _sortOption,
               isDesktop: isDesktop,
-              onCategorySelected: (cat) => setState(() => _selectedCategory = cat),
-              onSortSelected: (sort) => setState(() => _sortOption = sort),
+              onCategorySelected: (cat) {
+                _searchFocusNode.unfocus();
+                FocusScope.of(context).unfocus();
+                setState(() => _selectedCategory = cat);
+              },
+              onSortSelected: (sort) {
+                _searchFocusNode.unfocus();
+                FocusScope.of(context).unfocus();
+                setState(() => _sortOption = sort);
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  if (mounted) {
+                    _searchFocusNode.unfocus();
+                    FocusScope.of(context).unfocus();
+                  }
+                });
+              },
             ),
             SizedBox(height: isLandscapeMobile ? 6 : 10),
             RingkasanAtasBar(

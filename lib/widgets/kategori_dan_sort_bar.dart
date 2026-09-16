@@ -79,9 +79,15 @@ class KategoriDanSortBar extends StatelessWidget {
             PopupMenuButton<String>(
               tooltip: 'Urutkan Menu',
               offset: const Offset(0, 42),
+              requestFocus: false,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
+              onCanceled: () {
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  FocusManager.instance.primaryFocus?.unfocus();
+                });
+              },
               onSelected: onSortSelected,
               itemBuilder: (context) => [
                 const PopupMenuItem(
