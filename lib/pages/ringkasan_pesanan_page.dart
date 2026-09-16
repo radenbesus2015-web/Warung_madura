@@ -3,15 +3,6 @@ import '../models/menu_item.dart';
 import '../utils/business_rules.dart';
 import 'pembayaran_page.dart';
 
-// =======================================================
-// HALAMAN 2: Ringkasan Pesanan (Piring Penuh)
-// Sesuai UI Mockup Lengkap:
-// - Desain Desktop (Sidebar, Tabel Pesanan, Kartu Ringkasan)
-// - Desain Mobile Responsif
-// - Perhitungan Subtotal, Diskon 10% (>= 5 porsi), Total Bayar
-// - Edit Porsi, Hapus Item, Batalkan Pesanan
-// - Navigasi Sinkronisasi Cart kembali ke Halaman 1
-// =======================================================
 
 class RingkasanPesananPage extends StatefulWidget {
   final List<MenuItem> allMenus;

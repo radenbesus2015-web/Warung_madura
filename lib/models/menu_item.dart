@@ -1,11 +1,3 @@
-// ==========================================
-// MODEL: MenuItem
-// Sesuai Spesifikasi Piring Penuh & Sprint 1-4:
-// - Class buatan sendiri (bukan Map)
-// - Konstruktor lengkap dengan imageUrl
-// - Atribut: namaMenu, kategori, harga, tersedia, porsiTersisa, imageUrl
-// - Method perhitungan diskon & subtotal
-// ==========================================
 
 class MenuItem {
   final String namaMenu;

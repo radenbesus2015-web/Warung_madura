@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart';
 
-// ==========================================
-// TEMA UTAMA APLIKASI PIRING PENUH
-// ==========================================
 
 final ThemeData appTheme = ThemeData(
   useMaterial3: true,

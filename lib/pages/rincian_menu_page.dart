@@ -3,12 +3,6 @@ import '../models/menu_item.dart';
 import '../utils/business_rules.dart';
 import '../widgets/jumlah_porsi_counter.dart';
 
-// =======================================================
-// FITUR PILIHAN (F5): HALAMAN RINCIAN MENU
-// Menekan kartu menu akan membuka halaman ini untuk menampilkan
-// seluruh data menu secara lengkap (foto, kategori, harga, stok,
-// status ketersediaan, deskripsi, dan pengatur porsi).
-// =======================================================
 
 class RincianMenuPage extends StatefulWidget {
   final MenuItem item;

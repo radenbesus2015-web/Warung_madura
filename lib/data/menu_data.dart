@@ -1,10 +1,5 @@
 import '../models/menu_item.dart';
 
-// ==========================================
-// DATA MENU PIRING PENUH (14 Item Sesuai Spesifikasi)
-// Kategori: Makanan (6), Minuman (6), Camilan (2)
-// Gambar: Lokal dari assets/images/menu/
-// ==========================================
 
 final List<MenuItem> dummyMenuList = [
   // --- MAKANAN ---

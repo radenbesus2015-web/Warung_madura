@@ -1,8 +1,3 @@
-// =======================================================
-// ATURAN USAHA YANG WAJIB DIWUJUDKAN (PIRING PENUH)
-// Ditulis sebagai FUNGSI TERSENDIRI yang mengembalikan nilai
-// (Bukan menumpuk di dalam build).
-// =======================================================
 
 /// 1. Aturan Usaha 1: Pesanan 5 porsi ke atas untuk satu menu yang sama mendapat potongan 10%
 double hitungSubtotalMenu({required int harga, required int jumlahPorsi}) {
@@ -28,6 +23,29 @@ bool cekKetersediaanMenu({required bool tersedia, required int porsiTersisa}) {
 /// 3. Aturan Usaha 3: Validasi jumlah pesanan tidak boleh melebihi porsi yang tersisa
 bool validasiBatasPorsi({required int jumlahPorsi, required int porsiTersisa}) {
   return jumlahPorsi <= porsiTersisa;
+}
+
+/// Aturan Usaha Tambahan: Validasi status pesanan (If di dalam If dan If Bertingkat)
+String validasiStatusPemesanan({
+  required bool tersedia,
+  required int porsiTersisa,
+  required int jumlahPorsi,
+}) {
+  // If tingkat 1: cek ketersediaan menu
+  if (tersedia) {
+    // If tingkat 2 (if di dalam if / bertingkat): cek sisa porsi dan jumlah pesanan
+    if (porsiTersisa <= 0) {
+      return 'Stok Habis';
+    } else if (jumlahPorsi > porsiTersisa) {
+      return 'Pesanan Melebihi Stok';
+    } else if (jumlahPorsi > 0) {
+      return 'Pesanan Valid';
+    } else {
+      return 'Belum Dipesan';
+    }
+  } else {
+    return 'Menu Tidak Tersedia';
+  }
 }
 
 /// 4. Pembulatan pembayaran ke pecahan Rp500 terdekat
